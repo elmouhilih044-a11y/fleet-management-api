@@ -1,0 +1,26 @@
+{
+  "name": "fleet-management-api",
+  "version": "1.0.0",
+  "description": "API REST permettant de gérer une flotte de transport routier composée de camions, remorques, pneus, chauffeurs, trajets et opérations de maintenance.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elmouhilih044-a11y/fleet-management-api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/elmouhilih044-a11y/fleet-management-api/issues"
+  },
+  "homepage": "https://github.com/elmouhilih044-a11y/fleet-management-api#readme",
+  "dependencies": {
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "mongoose": "^9.10.3"
+  }
+}
