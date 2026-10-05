@@ -3,6 +3,7 @@ const authRoutes= require("./routes/authRoutes")
 const userRoutes= require("./routes/userRoutes")
 const truckRoutes= require("./routes/truckRoutes")
 const trailerRoutes= require("./routes/trailerRoutes")
+const tireRoutes= require("./routes/tireRoutes")
 const errorHandler= require("./middlewares/errorHandler")
 
 const app= express()
@@ -12,6 +13,7 @@ app.use("/api/auth", authRoutes)
 app.use("/api/users", userRoutes)
 app.use("/api/trucks", truckRoutes)
 app.use("/api/trailers", trailerRoutes)
+app.use("/api/tires", tireRoutes )
 
 app.use(errorHandler)
 
