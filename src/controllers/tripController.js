@@ -1,0 +1,44 @@
+const tripService= require("../services/tripService")
+
+const getAllTrips= async(req,res,next)=> {
+  try {
+    res.status(200).json(await tripService.getAllTrips(req.query))
+  }catch(error){
+    next(error)
+  }
+}
+const getTripById= async(req,res,next)=> {
+  try {
+    res.status(200).json(await tripService.getTripById(req.params.id))
+  }catch(error){
+    next(error)
+  }
+}
+const createTrip= async (req,res,next)=> {
+  try{
+    res.status(201).json(await tripService.createTrip(req.body))
+  }catch(error){
+    next(error)
+  }
+}
+const updateTrip= async(req,res,next)=> {
+  try{
+    res.status(200).json(await tripService.updateTrip(req.params.id,req.body))
+  }catch(error){
+    next(error)
+  }
+}
+const deleteTrip= async (req, res, next)=> {
+  try {
+    res.status(200).json(await tripService.deleteTrip(req.params.id))
+  }catch(error){
+    next(error)
+  }
+}
+module.exports= { 
+    getAllTrips, 
+    getTripById, 
+    createTrip, 
+    updateTrip, 
+    deleteTrip 
+}
