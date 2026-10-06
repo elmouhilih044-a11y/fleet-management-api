@@ -67,10 +67,24 @@ const deleteTrip= async (id)=> {
  }
 }
 
+const getMyTrips= async (driverId, filters)=> {
+  const query= { driver: driverId }
+  if (filters.status) query.status= filters.status
+  return await populateTrip(Trip.find(query))
+}
+const getMyTrip= async (tripId, driverId)=> {
+  const trip= await populateTrip(Trip.findOne({ _id: tripId, driver: driverId }))
+  if (!trip) throw new AppError("Trajet introuvable", 404)
+  return trip
+}
+
 module.exports= { 
     getAllTrips, 
     getTripById, 
     createTrip, 
     updateTrip, 
-    deleteTrip 
+    deleteTrip,
+    getMyTrips,
+    getMyTrip
+
 }
