@@ -78,6 +78,24 @@ const getMyTrip= async (tripId, driverId)=> {
   return trip
 }
 
+const nextStatus= { todo: "in_progress", in_progress: "completed" }
+
+const updateMyTripStatus= async (tripId, driverId, data)=> {
+  const trip= await Trip.findOne({ _id: tripId, driver: driverId })
+  if (!trip) throw new AppError("Trajet introuvable", 404)
+  if (nextStatus[trip.status] !== data.status) throw new AppError("Changement de statut interdit", 409)
+  if (data.status === "in_progress") trip.startMileage= data.startMileage
+  if (data.status === "completed") {
+    if (data.endMileage <= trip.startMileage) throw new AppError("Le kilométrage d'arrivée doit être strictement supérieur au kilométrage de départ", 400)
+    trip.endMileage= data.endMileage
+    trip.fuelConsumed= data.fuelConsumed
+  }
+  if (data.notes) trip.notes= data.notes
+  trip.status= data.status
+  await trip.save()
+  return trip
+}
+
 module.exports= { 
     getAllTrips, 
     getTripById, 
@@ -85,6 +103,7 @@ module.exports= {
     updateTrip, 
     deleteTrip,
     getMyTrips,
-    getMyTrip
+    getMyTrip,
+    updateMyTripStatus
 
 }
