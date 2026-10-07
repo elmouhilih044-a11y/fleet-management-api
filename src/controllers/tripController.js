@@ -50,6 +50,13 @@ const getMyTrip= async(req, res, next)=>{
     next(error)
   }
 }
+const updateMyTripStatus= async(req,res,next)=>{
+  try{
+    res.status(200).json(await tripService.updateMyTripStatus(req.params.id, req.user.userId, req.body))
+  }catch(error){
+    next(error)
+  }
+}
 module.exports= { 
     getAllTrips, 
     getTripById, 
@@ -57,6 +64,7 @@ module.exports= {
     updateTrip, 
     deleteTrip,
     getMyTrips,
-    getMyTrip
+    getMyTrip,
+    updateMyTripStatus
 
 }

@@ -25,4 +25,5 @@ const updateTripSchema= Joi.object({
 
 module.exports= { 
     createTripSchema,
-     updateTripSchema }
+     updateTripSchema
+     }
