@@ -1,6 +1,9 @@
 const Trip= require("../models/Trip")
 const AppError= require("../utils/AppError")
 const { checkAvailability }= require("./availabilityService")
+const Truck= require("../models/Truck")
+const Trailer= require("../models/Trailer")
+const { calcMileage, calcConsumption }= require("./mileageService")
 
 const checkDates= (start, end)=> {
   if(new Date(end) <= new Date(start))
@@ -84,16 +87,20 @@ const updateMyTripStatus= async (tripId, driverId, data)=> {
   const trip= await Trip.findOne({ _id: tripId, driver: driverId })
   if (!trip) throw new AppError("Trajet introuvable", 404)
   if (nextStatus[trip.status] !== data.status) throw new AppError("Changement de statut interdit", 409)
+  if (data.notes) trip.notes= data.notes
   if (data.status === "in_progress") trip.startMileage= data.startMileage
   if (data.status === "completed") {
     if (data.endMileage <= trip.startMileage) throw new AppError("Le kilométrage d'arrivée doit être strictement supérieur au kilométrage de départ", 400)
     trip.endMileage= data.endMileage
     trip.fuelConsumed= data.fuelConsumed
   }
-  if (data.notes) trip.notes= data.notes
   trip.status= data.status
   await trip.save()
-  return trip
+  if (data.status !== "completed") return trip
+  const totalMileage= calcMileage(trip.startMileage, trip.endMileage)
+  await Truck.findByIdAndUpdate(trip.truck, { $inc: { currentMileage: totalMileage } })
+  await Trailer.findByIdAndUpdate(trip.trailer, { $inc: { currentMileage: totalMileage } })
+  return { ...trip.toObject(), totalMileage, consumption: calcConsumption(trip.fuelConsumed, totalMileage) }
 }
 
 module.exports= { 
