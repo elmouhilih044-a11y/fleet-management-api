@@ -23,6 +23,12 @@ const maintenanceAlertSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    
+    mileage:{
+      type: Number,
+      required: true,
+      min: 0
+    },
 
     status:{
       type: String,

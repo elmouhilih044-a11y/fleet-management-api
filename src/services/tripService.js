@@ -4,6 +4,8 @@ const { checkAvailability }= require("./availabilityService")
 const Truck= require("../models/Truck")
 const Trailer= require("../models/Trailer")
 const { calcMileage, calcConsumption }= require("./mileageService")
+const Tire= require("../models/Tire")
+const { checkVehicleAlerts, checkTireAlerts }= require("./alertService")
 
 const checkDates= (start, end)=> {
   if(new Date(end) <= new Date(start))
@@ -100,6 +102,10 @@ const updateMyTripStatus= async (tripId, driverId, data)=> {
   const totalMileage= calcMileage(trip.startMileage, trip.endMileage)
   await Truck.findByIdAndUpdate(trip.truck, { $inc: { currentMileage: totalMileage } })
   await Trailer.findByIdAndUpdate(trip.trailer, { $inc: { currentMileage: totalMileage } })
+  await Tire.updateMany({ truck: trip.truck }, { $inc: { currentMileage: totalMileage } })
+  await checkVehicleAlerts("truck", trip.truck)
+  await checkVehicleAlerts("trailer", trip.trailer)
+  await checkTireAlerts(trip.truck)
   return { ...trip.toObject(), totalMileage, consumption: calcConsumption(trip.fuelConsumed, totalMileage) }
 }
 

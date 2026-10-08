@@ -1,5 +1,7 @@
 const MaintenanceRule= require("../models/MaintenanceRule")
 const AppError= require("../utils/AppError")
+const MaintenanceAlert= require("../models/MaintenanceAlert")
+const Tire= require("../models/Tire")
 
 const getAllRules= async(filters)=> {
   const query= {}
@@ -34,8 +36,40 @@ const deleteRule= async(id)=>{
   return { message: "Règle supprimée" }
 }
 
+const getAllAlerts= async(filters)=> {
+  const query= {}
+  if(filters.status) 
+    query.status= filters.status
+  if(filters.vehicleType)
+     query.vehicleType= filters.vehicleType
+  return await MaintenanceAlert.find(query).sort({ createdAt: -1 })
+}
+
+const resolveAlert= async(id)=> {
+  const alert= await MaintenanceAlert.findById(id)
+  if(!alert) 
+    throw new AppError("Alerte introuvable", 404)
+  if(alert.status === "resolved") 
+    throw new AppError("Alerte déjà traitée", 409)
+  if(alert.vehicleType === "tire"){
+    const tire= await Tire.findById(alert.vehicle)
+    if(tire){
+      tire.status= "good"
+      tire.installationMileage= tire.currentMileage
+      await tire.save()
+    }
+  }
+  alert.status= "resolved"
+  await alert.save()
+  return alert
+}
+
 module.exports= {
      getAllRules,
       createRule, 
       updateRule,
-       deleteRule }
+       deleteRule,
+       getAllAlerts,
+       resolveAlert
+
+     }

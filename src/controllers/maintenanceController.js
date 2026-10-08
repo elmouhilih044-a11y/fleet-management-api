@@ -31,10 +31,28 @@ const deleteRule= async(req, res, next)=>{
     next(error)
   }
 }
+const getAllAlerts= async(req, res, next)=> {
+  try{
+    res.status(200).json(await maintenanceService.getAllAlerts(req.query))
+  }catch(error){
+    next(error)
+  }
+}
+
+const resolveAlert= async(req, res, next)=> {
+  try{
+    res.status(200).json(await maintenanceService.resolveAlert(req.params.id))
+  }catch(error){
+    next(error)
+  }
+}
 
 module.exports= {
      getAllRules,
       createRule, 
       updateRule, 
-      deleteRule 
+      deleteRule,
+      getAllAlerts,
+      resolveAlert
+
     }

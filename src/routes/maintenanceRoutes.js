@@ -13,4 +13,8 @@ router.post("/rules", validate(createRuleSchema), maintenanceController.createRu
 router.put("/rules/:id", validate(updateRuleSchema), maintenanceController.updateRule)
 router.delete("/rules/:id", maintenanceController.deleteRule)
 
+
+router.get("/alerts", maintenanceController.getAllAlerts)
+router.put("/alerts/:id/resolve", maintenanceController.resolveAlert)
+
 module.exports= router
