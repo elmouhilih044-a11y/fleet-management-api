@@ -10,6 +10,7 @@ router.use(auth, authorize("driver"))
 
 router.get("/", tripController.getMyTrips)
 router.get("/:id", tripController.getMyTrip)
+router.get("/:id/pdf", tripController.getMyTripPdf)
 router.put("/:id/status", validate(updateStatusSchema), tripController.updateMyTripStatus)
 
 module.exports= router

@@ -1,5 +1,5 @@
 const tripService= require("../services/tripService")
-
+const pdfService= require("../services/pdfService")
 const getAllTrips= async(req,res,next)=> {
   try {
     res.status(200).json(await tripService.getAllTrips(req.query))
@@ -53,6 +53,16 @@ const getMyTrip= async(req, res, next)=>{
 const updateMyTripStatus= async(req,res,next)=>{
   try{
     res.status(200).json(await tripService.updateMyTripStatus(req.params.id, req.user.userId, req.body))
+  }catch(error){
+    next(error)
+  }
+}
+const getMyTripPdf= async (req, res, next)=> {
+  try{
+    const trip= await tripService.getMyTripForPdf(req.params.id, req.user.userId)
+    res.setHeader("Content-Type", "application/pdf")
+    res.setHeader("Content-Disposition", `attachment; filename=ordre-mission-${trip._id}.pdf`)
+    pdfService.generateMissionOrder(trip, res)
   }catch(error){
     next(error)
   }
