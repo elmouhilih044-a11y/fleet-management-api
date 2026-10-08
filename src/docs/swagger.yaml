@@ -1,0 +1,1523 @@
+openapi: 3.0.0
+info:
+  title: API de Gestion de Flotte de Transport Routier
+  version: 1.0.0
+  description: 'API REST pour gérer les camions, remorques, pneus, trajets et la maintenance. Deux rôles : admin et driver (chauffeur). Pour tester les routes protégées : se connecter avec /api/auth/login, puis cliquer sur Authorize et coller le token.'
+servers:
+  - url: http://localhost:3000
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+    description: Connexion (public)
+  - name: Chauffeurs (admin)
+    description: Gestion des comptes chauffeurs
+  - name: Camions (admin)
+    description: Gestion des camions
+  - name: Remorques (admin)
+    description: Gestion des remorques
+  - name: Pneus (admin)
+    description: Gestion des pneus
+  - name: Trajets (admin)
+    description: Création et assignation des trajets
+  - name: Mes trajets (chauffeur)
+    description: Trajets du chauffeur connecté
+  - name: Maintenance (admin)
+    description: Règles et alertes de maintenance
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      description: Identifiant MongoDB
+      schema:
+        type: string
+        example: 6ac397c7e4ed6b60dd97d136
+  responses:
+    BadRequest:
+      description: Données invalides
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Token manquant, invalide ou expiré
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: 'Accès interdit : rôle non autorisé'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Ressource introuvable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: 'Conflit : doublon, disponibilité ou statut interdit'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+    Driver:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+            - driver
+        status:
+          type: string
+          enum:
+            - active
+            - suspended
+        createdAt:
+          type: string
+          format: date-time
+    NewDriver:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - password
+      properties:
+        firstName:
+          type: string
+          example: Ali
+        lastName:
+          type: string
+          example: Benali
+        email:
+          type: string
+          format: email
+          example: ali@fleet.com
+        password:
+          type: string
+          minLength: 6
+          example: '123456'
+    Truck:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        registrationNumber:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        currentMileage:
+          type: number
+        status:
+          type: string
+          enum:
+            - available
+            - maintenance
+            - inactive
+        createdAt:
+          type: string
+          format: date-time
+    NewTruck:
+      type: object
+      required:
+        - registrationNumber
+        - brand
+        - model
+        - currentMileage
+      properties:
+        registrationNumber:
+          type: string
+          example: 12345-A-1
+        brand:
+          type: string
+          example: Volvo
+        model:
+          type: string
+          example: FH16
+        currentMileage:
+          type: number
+          minimum: 0
+          example: 50000
+    UpdateTruck:
+      type: object
+      minProperties: 1
+      properties:
+        registrationNumber:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        currentMileage:
+          type: number
+          minimum: 0
+        status:
+          type: string
+          enum:
+            - available
+            - maintenance
+            - inactive
+    Trailer:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        registrationNumber:
+          type: string
+        type:
+          type: string
+        currentMileage:
+          type: number
+        status:
+          type: string
+          enum:
+            - available
+            - maintenance
+            - inactive
+        createdAt:
+          type: string
+          format: date-time
+    NewTrailer:
+      type: object
+      required:
+        - registrationNumber
+        - type
+        - currentMileage
+      properties:
+        registrationNumber:
+          type: string
+          example: 98765-B-2
+        type:
+          type: string
+          example: frigorifique
+        currentMileage:
+          type: number
+          minimum: 0
+          example: 20000
+    UpdateTrailer:
+      type: object
+      minProperties: 1
+      properties:
+        registrationNumber:
+          type: string
+        type:
+          type: string
+        currentMileage:
+          type: number
+          minimum: 0
+        status:
+          type: string
+          enum:
+            - available
+            - maintenance
+            - inactive
+    Tire:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        serialNumber:
+          type: string
+        truck:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        position:
+          type: string
+        installationMileage:
+          type: number
+        currentMileage:
+          type: number
+        wearThreshold:
+          type: number
+        status:
+          type: string
+          enum:
+            - good
+            - worn
+            - to_replace
+        createdAt:
+          type: string
+          format: date-time
+    NewTire:
+      type: object
+      required:
+        - serialNumber
+        - truck
+        - position
+        - installationMileage
+        - currentMileage
+        - wearThreshold
+      properties:
+        serialNumber:
+          type: string
+          example: TIRE-001
+        truck:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        position:
+          type: string
+          example: avant gauche
+        installationMileage:
+          type: number
+          minimum: 0
+          example: 50000
+        currentMileage:
+          type: number
+          minimum: 0
+          example: 50000
+        wearThreshold:
+          type: number
+          minimum: 0
+          example: 80000
+    UpdateTire:
+      type: object
+      minProperties: 1
+      properties:
+        serialNumber:
+          type: string
+        truck:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        position:
+          type: string
+        currentMileage:
+          type: number
+          minimum: 0
+        wearThreshold:
+          type: number
+          minimum: 0
+        status:
+          type: string
+          enum:
+            - good
+            - worn
+            - to_replace
+    Trip:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        departureSite:
+          type: string
+        arrivalSite:
+          type: string
+        goods:
+          type: string
+        plannedStartDate:
+          type: string
+          format: date-time
+        plannedEndDate:
+          type: string
+          format: date-time
+        driver:
+          type: object
+          properties:
+            _id:
+              type: string
+              example: 6ac397c7e4ed6b60dd97d136
+            firstName:
+              type: string
+            lastName:
+              type: string
+        truck:
+          type: object
+          properties:
+            _id:
+              type: string
+              example: 6ac397c7e4ed6b60dd97d136
+            registrationNumber:
+              type: string
+        trailer:
+          type: object
+          properties:
+            _id:
+              type: string
+              example: 6ac397c7e4ed6b60dd97d136
+            registrationNumber:
+              type: string
+        status:
+          type: string
+          enum:
+            - todo
+            - in_progress
+            - completed
+        startMileage:
+          type: number
+        endMileage:
+          type: number
+        fuelConsumed:
+          type: number
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    NewTrip:
+      type: object
+      required:
+        - departureSite
+        - arrivalSite
+        - goods
+        - plannedStartDate
+        - plannedEndDate
+        - driver
+        - truck
+        - trailer
+      properties:
+        departureSite:
+          type: string
+          example: Youssoufia
+        arrivalSite:
+          type: string
+          example: Casablanca
+        goods:
+          type: string
+          example: Phosphate
+        plannedStartDate:
+          type: string
+          format: date-time
+          example: '2026-11-01T08:00:00Z'
+        plannedEndDate:
+          type: string
+          format: date-time
+          example: '2026-11-01T18:00:00Z'
+        driver:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        truck:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        trailer:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+    UpdateTrip:
+      type: object
+      minProperties: 1
+      properties:
+        departureSite:
+          type: string
+        arrivalSite:
+          type: string
+        goods:
+          type: string
+        plannedStartDate:
+          type: string
+          format: date-time
+        plannedEndDate:
+          type: string
+          format: date-time
+        driver:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        truck:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        trailer:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+    TripStatusUpdate:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - in_progress
+            - completed
+          example: in_progress
+        startMileage:
+          type: number
+          minimum: 0
+          example: 57000
+          description: Obligatoire si status = in_progress
+        endMileage:
+          type: number
+          minimum: 0
+          example: 57500
+          description: Obligatoire si status = completed, doit être strictement supérieur au kilométrage de départ
+        fuelConsumed:
+          type: number
+          minimum: 0
+          example: 120
+          description: Litres de gasoil, obligatoire si status = completed
+        notes:
+          type: string
+          example: Pneu avant gauche un peu usé
+    TripStatusResult:
+      allOf:
+        - $ref: '#/components/schemas/Trip'
+        - type: object
+          description: totalMileage et consumption sont renvoyés seulement quand le trajet est terminé
+          properties:
+            totalMileage:
+              type: number
+              example: 500
+            consumption:
+              type: number
+              example: 24
+              description: Litres pour 100 km
+    MaintenanceRule:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        vehicleType:
+          type: string
+          enum:
+            - truck
+            - trailer
+        maintenanceType:
+          type: string
+          enum:
+            - oil_change
+            - inspection
+            - tire
+        mileageInterval:
+          type: integer
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    NewRule:
+      type: object
+      required:
+        - vehicleType
+        - maintenanceType
+        - mileageInterval
+      properties:
+        vehicleType:
+          type: string
+          enum:
+            - truck
+            - trailer
+          example: truck
+        maintenanceType:
+          type: string
+          enum:
+            - oil_change
+            - inspection
+            - tire
+          example: oil_change
+        mileageInterval:
+          type: integer
+          minimum: 1
+          example: 10000
+        isActive:
+          type: boolean
+          example: true
+    UpdateRule:
+      type: object
+      minProperties: 1
+      properties:
+        mileageInterval:
+          type: integer
+          minimum: 1
+        isActive:
+          type: boolean
+    MaintenanceAlert:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        vehicleType:
+          type: string
+          enum:
+            - truck
+            - trailer
+            - tire
+        vehicle:
+          type: string
+          example: 6ac397c7e4ed6b60dd97d136
+        maintenanceType:
+          type: string
+          enum:
+            - oil_change
+            - inspection
+            - tire
+        mileage:
+          type: number
+        message:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - resolved
+        createdAt:
+          type: string
+          format: date-time
+paths:
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Se connecter
+      description: Accessible à tous. Un compte suspendu ne peut pas se connecter.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: admin@fleet.com
+                password:
+                  type: string
+                  example: Admin123
+      responses:
+        '200':
+          description: 'Connexion réussie : token et informations de l''utilisateur'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      firstName:
+                        type: string
+                      lastName:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                        enum:
+                          - admin
+                          - driver
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Email ou mot de passe incorrect
+        '403':
+          description: Compte suspendu
+  /api/users/drivers:
+    get:
+      tags:
+        - Chauffeurs (admin)
+      summary: Lister les chauffeurs
+      description: 'Rôle : admin.'
+      responses:
+        '200':
+          description: Liste des chauffeurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Driver'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Chauffeurs (admin)
+      summary: Créer un compte chauffeur
+      description: 'Rôle : admin. Le compte créé a toujours le rôle driver.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewDriver'
+      responses:
+        '201':
+          description: Chauffeur créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/users/drivers/{id}/suspend:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    put:
+      tags:
+        - Chauffeurs (admin)
+      summary: Suspendre un chauffeur
+      description: 'Rôle : admin. Un chauffeur suspendu ne peut ni se connecter, ni être assigné à un trajet.'
+      responses:
+        '200':
+          description: Chauffeur suspendu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/users/drivers/{id}/activate:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    put:
+      tags:
+        - Chauffeurs (admin)
+      summary: Réactiver un chauffeur
+      description: 'Rôle : admin.'
+      responses:
+        '200':
+          description: Chauffeur réactivé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/trucks:
+    get:
+      tags:
+        - Camions (admin)
+      summary: Lister les camions
+      description: 'Rôle : admin. Filtres facultatifs par statut ou par marque.'
+      parameters:
+        - name: status
+          in: query
+          description: Filtrer par statut
+          schema:
+            type: string
+            enum:
+              - available
+              - maintenance
+              - inactive
+        - name: brand
+          in: query
+          description: Filtrer par marque
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des camions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Truck'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Camions (admin)
+      summary: Créer un camion
+      description: 'Rôle : admin. Le statut est available par défaut.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTruck'
+      responses:
+        '201':
+          description: Camion créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Truck'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/trucks/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags:
+        - Camions (admin)
+      summary: Consulter un camion
+      description: 'Rôle : admin.'
+      responses:
+        '200':
+          description: Camion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Truck'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Camions (admin)
+      summary: Modifier un camion
+      description: 'Rôle : admin. Tous les champs sont facultatifs, il en faut au moins un. Le statut maintenance interdit toute assignation.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTruck'
+      responses:
+        '200':
+          description: Camion modifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Truck'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+        - Camions (admin)
+      summary: Archiver un camion
+      description: 'Rôle : admin. Le camion n''est pas supprimé : son statut passe à inactive.'
+      responses:
+        '200':
+          description: Camion archivé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Truck'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/trailers:
+    get:
+      tags:
+        - Remorques (admin)
+      summary: Lister les remorques
+      description: 'Rôle : admin. Filtres facultatifs par statut ou par type.'
+      parameters:
+        - name: status
+          in: query
+          description: Filtrer par statut
+          schema:
+            type: string
+            enum:
+              - available
+              - maintenance
+              - inactive
+        - name: type
+          in: query
+          description: Filtrer par type
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des remorques
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trailer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Remorques (admin)
+      summary: Créer une remorque
+      description: 'Rôle : admin. Le statut est available par défaut.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTrailer'
+      responses:
+        '201':
+          description: Remorque créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trailer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/trailers/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags:
+        - Remorques (admin)
+      summary: Consulter une remorque
+      description: 'Rôle : admin.'
+      responses:
+        '200':
+          description: Remorque
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trailer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Remorques (admin)
+      summary: Modifier une remorque
+      description: 'Rôle : admin. Tous les champs sont facultatifs, il en faut au moins un. Le statut maintenance interdit toute assignation.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTrailer'
+      responses:
+        '200':
+          description: Remorque modifiée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trailer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+        - Remorques (admin)
+      summary: Archiver une remorque
+      description: 'Rôle : admin. La remorque n''est pas supprimée : son statut passe à inactive.'
+      responses:
+        '200':
+          description: Remorque archivée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trailer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/tires:
+    get:
+      tags:
+        - Pneus (admin)
+      summary: Lister les pneus
+      description: 'Rôle : admin. Filtres facultatifs : pneus d''un camion ou par état. Le camion est renvoyé avec son immatriculation, sa marque et son modèle.'
+      parameters:
+        - name: truck
+          in: query
+          description: Identifiant du camion
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filtrer par état
+          schema:
+            type: string
+            enum:
+              - good
+              - worn
+              - to_replace
+      responses:
+        '200':
+          description: Liste des pneus
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tire'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Pneus (admin)
+      summary: Créer un pneu et l'associer à un camion
+      description: 'Rôle : admin. L''état est good par défaut.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTire'
+      responses:
+        '201':
+          description: Pneu créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tire'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tires/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags:
+        - Pneus (admin)
+      summary: Consulter un pneu
+      description: 'Rôle : admin.'
+      responses:
+        '200':
+          description: Pneu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tire'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Pneus (admin)
+      summary: Modifier un pneu ou changer son camion
+      description: 'Rôle : admin. Tous les champs sont facultatifs, il en faut au moins un.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTire'
+      responses:
+        '200':
+          description: Pneu modifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tire'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+        - Pneus (admin)
+      summary: Supprimer un pneu
+      description: 'Rôle : admin. Suppression définitive.'
+      responses:
+        '200':
+          description: Pneu supprimé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/trips:
+    get:
+      tags:
+        - Trajets (admin)
+      summary: Lister les trajets
+      description: 'Rôle : admin. Filtres facultatifs par statut, chauffeur ou camion.'
+      parameters:
+        - name: status
+          in: query
+          description: Filtrer par statut
+          schema:
+            type: string
+            enum:
+              - todo
+              - in_progress
+              - completed
+        - name: driver
+          in: query
+          description: Identifiant du chauffeur
+          schema:
+            type: string
+        - name: truck
+          in: query
+          description: Identifiant du camion
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des trajets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trip'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Trajets (admin)
+      summary: Créer un trajet et l'assigner
+      description: 'Rôle : admin. Le trajet est créé avec le statut todo. La réponse contient les identifiants du chauffeur, du camion et de la remorque. Réponse 409 si le camion, la remorque ou le chauffeur est déjà occupé sur la période, si le camion ou la remorque est en maintenance ou archivé, si le chauffeur est suspendu, ou si un véhicule a une alerte de maintenance non traitée ou un pneu à remplacer. Réponse 400 si la date de fin n''est pas après la date de début.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTrip'
+      responses:
+        '201':
+          description: Trajet créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/trips/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags:
+        - Trajets (admin)
+      summary: Consulter un trajet
+      description: 'Rôle : admin.'
+      responses:
+        '200':
+          description: Trajet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Trajets (admin)
+      summary: Modifier un trajet
+      description: 'Rôle : admin. Seul un trajet à faire (todo) peut être modifié. Les mêmes règles de disponibilité que pour la création s''appliquent.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTrip'
+      responses:
+        '200':
+          description: Trajet modifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+        - Trajets (admin)
+      summary: Supprimer un trajet
+      description: 'Rôle : admin. Seul un trajet à faire (todo) peut être supprimé.'
+      responses:
+        '200':
+          description: Trajet supprimé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/my-trips:
+    get:
+      tags:
+        - Mes trajets (chauffeur)
+      summary: Lister mes trajets
+      description: 'Rôle : chauffeur (driver). Le chauffeur voit seulement ses propres trajets. Un admin reçoit 403.'
+      parameters:
+        - name: status
+          in: query
+          description: Filtrer par statut
+          schema:
+            type: string
+            enum:
+              - todo
+              - in_progress
+              - completed
+      responses:
+        '200':
+          description: Mes trajets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trip'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/my-trips/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags:
+        - Mes trajets (chauffeur)
+      summary: Consulter un de mes trajets
+      description: 'Rôle : chauffeur (driver). Réponse 404 si le trajet appartient à un autre chauffeur.'
+      responses:
+        '200':
+          description: Trajet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/my-trips/{id}/pdf:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags:
+        - Mes trajets (chauffeur)
+      summary: Télécharger l'ordre de mission en PDF
+      description: 'Rôle : chauffeur (driver). Le PDF contient le chauffeur, le camion, la remorque et le trajet. Réponse 404 si le trajet appartient à un autre chauffeur.'
+      responses:
+        '200':
+          description: Ordre de mission au format PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/my-trips/{id}/status:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    put:
+      tags:
+        - Mes trajets (chauffeur)
+      summary: Mettre à jour le statut de mon trajet
+      description: 'Rôle : chauffeur (driver). Le statut évolue seulement dans l''ordre todo, in_progress, completed, sans retour en arrière. Pour démarrer (in_progress), startMileage est obligatoire. Pour terminer (completed), endMileage et fuelConsumed sont obligatoires, et endMileage doit être strictement supérieur à startMileage. Quand le trajet est terminé, le kilométrage des véhicules et des pneus est mis à jour et les alertes de maintenance sont vérifiées.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripStatusUpdate'
+      responses:
+        '200':
+          description: Trajet mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripStatusResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/maintenance/rules:
+    get:
+      tags:
+        - Maintenance (admin)
+      summary: Lister les règles de maintenance
+      description: 'Rôle : admin. Filtres facultatifs par type de véhicule ou de maintenance.'
+      parameters:
+        - name: vehicleType
+          in: query
+          description: Type de véhicule
+          schema:
+            type: string
+            enum:
+              - truck
+              - trailer
+        - name: maintenanceType
+          in: query
+          description: Type de maintenance
+          schema:
+            type: string
+            enum:
+              - oil_change
+              - inspection
+              - tire
+      responses:
+        '200':
+          description: Liste des règles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MaintenanceRule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Maintenance (admin)
+      summary: Créer une règle de périodicité
+      description: 'Rôle : admin. Une seule règle par couple type de véhicule et type de maintenance. Quand le kilométrage d''un véhicule dépasse l''intervalle, une alerte est créée et bloque toute nouvelle assignation.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewRule'
+      responses:
+        '201':
+          description: Règle créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintenanceRule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/maintenance/rules/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    put:
+      tags:
+        - Maintenance (admin)
+      summary: Modifier une règle
+      description: 'Rôle : admin. On peut changer l''intervalle en kilomètres ou activer et désactiver la règle.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRule'
+      responses:
+        '200':
+          description: Règle modifiée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintenanceRule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Maintenance (admin)
+      summary: Supprimer une règle
+      description: 'Rôle : admin.'
+      responses:
+        '200':
+          description: Règle supprimée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/maintenance/alerts:
+    get:
+      tags:
+        - Maintenance (admin)
+      summary: Lister les alertes de maintenance
+      description: 'Rôle : admin. Les plus récentes d''abord. Utiliser status=pending pour voir les alertes non traitées.'
+      parameters:
+        - name: status
+          in: query
+          description: Statut de l'alerte
+          schema:
+            type: string
+            enum:
+              - pending
+              - resolved
+        - name: vehicleType
+          in: query
+          description: Type de véhicule
+          schema:
+            type: string
+            enum:
+              - truck
+              - trailer
+              - tire
+      responses:
+        '200':
+          description: Liste des alertes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MaintenanceAlert'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/maintenance/alerts/{id}/resolve:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    put:
+      tags:
+        - Maintenance (admin)
+      summary: Marquer une alerte comme traitée
+      description: 'Rôle : admin. Le véhicule redevient assignable. Pour une alerte de pneu, le pneu est remis à l''état good et son usure repart de zéro.'
+      responses:
+        '200':
+          description: Alerte traitée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintenanceAlert'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'

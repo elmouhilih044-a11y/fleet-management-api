@@ -23,8 +23,10 @@
     "dotenv": "^18.0.5",
     "express": "^5.2.1",
     "joi": "^18.2.9",
+    "js-yaml": "^5.4.3",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.10.3",
-    "pdfkit": "^0.20.2"
+    "pdfkit": "^0.20.2",
+    "swagger-ui-express": "^5.0.1"
   }
 }

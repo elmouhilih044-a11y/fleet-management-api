@@ -1,5 +1,6 @@
 const tripService= require("../services/tripService")
 const pdfService= require("../services/pdfService")
+
 const getAllTrips= async(req,res,next)=> {
   try {
     res.status(200).json(await tripService.getAllTrips(req.query))
@@ -75,6 +76,7 @@ module.exports= {
     deleteTrip,
     getMyTrips,
     getMyTrip,
-    updateMyTripStatus
+    updateMyTripStatus,
+    getMyTripPdf
 
 }
