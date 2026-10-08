@@ -108,6 +108,14 @@ const updateMyTripStatus= async (tripId, driverId, data)=> {
   await checkTireAlerts(trip.truck)
   return { ...trip.toObject(), totalMileage, consumption: calcConsumption(trip.fuelConsumed, totalMileage) }
 }
+const getMyTripForPdf= async (tripId, driverId)=> {
+  const trip= await Trip.findOne({ _id: tripId, driver: driverId })
+    .populate("driver", "firstName lastName")
+    .populate("truck", "registrationNumber brand model")
+    .populate("trailer", "registrationNumber type")
+  if (!trip) throw new AppError("Trajet introuvable", 404)
+  return trip
+}
 
 module.exports= { 
     getAllTrips, 
@@ -117,6 +125,7 @@ module.exports= {
     deleteTrip,
     getMyTrips,
     getMyTrip,
-    updateMyTripStatus
+    updateMyTripStatus,
+    getMyTripForPdf
 
 }
