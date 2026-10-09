@@ -1,0 +1,14 @@
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file: .env
+    environment:
+      DATABASE_URL: mongodb://mongo:27017/fleet_management
+    depends_on:
+      - mongo
+    restart: on-failure
+
+  mongo:
+    image: mongo:7
