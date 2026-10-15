@@ -2,9 +2,11 @@
   "name": "fleet-management-api",
   "version": "1.0.0",
   "description": "API REST permettant de gérer une flotte de transport routier composée de camions, remorques, pneus, chauffeurs, trajets et opérations de maintenance.",
-  "main": "index.js",
+    "main": "server.js",
   "scripts": {
-    "test": "jest"
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
