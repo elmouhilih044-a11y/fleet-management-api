@@ -22,5 +22,37 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: cgr.dev/chainguard/minio:latest
+    user: "0:0"
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+
+  createbucket:
+    image: cgr.dev/chainguard/minio-client:latest
+    depends_on:
+      - minio
+    environment:
+      MC_CONFIG_DIR: /tmp/mc
+      MC_HOST_local: http://${MINIO_ROOT_USER}:${MINIO_ROOT_PASSWORD}@minio:9000
+    command: mb --ignore-existing local/fleettrack-documents
+    restart: on-failure
+
 volumes:
   mongo_data:
+  minio_data:
