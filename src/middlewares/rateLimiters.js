@@ -1,0 +1,11 @@
+const { rateLimit }= require("express-rate-limit")
+const { slowDown }= require("express-slow-down")
+const { RedisStore }= require("rate-limit-redis")
+const redis= require("../config/redis")
+const createStore= (prefix)=> new RedisStore({ prefix, sendCommand: (...args)=> redis.call(...args) })
+const createLimiter= (prefix, windowMs, limit)=> rateLimit({ windowMs, limit, store: createStore(prefix), standardHeaders: true, legacyHeaders: false, passOnStoreError: true, message: { message: "Trop de requêtes, réessayez plus tard" } })
+const authLimiter= createLimiter("rl:auth:", 15 * 60 * 1000, 10)
+const apiLimiter= createLimiter("rl:api:", 60 * 1000, 120)
+const analyticsLimiter= createLimiter("rl:analytics:", 60 * 1000, 20)
+const speedLimiter= slowDown({ windowMs: 15 * 60 * 1000, delayAfter: 50, delayMs: (used)=> (used - 50) * 150, maxDelayMs: 2000, store: createStore("sd:") })
+module.exports= { authLimiter, apiLimiter, analyticsLimiter, speedLimiter }

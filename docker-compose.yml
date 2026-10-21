@@ -7,11 +7,13 @@ services:
     environment:
       PORT: 3000
       DATABASE_URL: mongodb://mongo:27017/fleet_management
+      REDIS_URL: redis://redis:6379
     depends_on:
       mongo:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: on-failure
-
   mongo:
     image: mongo:7
     volumes:
@@ -21,15 +23,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
   redis:
     image: redis:7-alpine
+    ports:
+      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-
   minio:
     image: cgr.dev/chainguard/minio:latest
     user: "0:0"
@@ -42,7 +44,6 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
-
   createbucket:
     image: cgr.dev/chainguard/minio-client:latest
     depends_on:
@@ -52,7 +53,6 @@ services:
       MC_HOST_local: http://${MINIO_ROOT_USER}:${MINIO_ROOT_PASSWORD}@minio:9000
     command: mb --ignore-existing local/fleettrack-documents
     restart: on-failure
-
 volumes:
   mongo_data:
   minio_data:
