@@ -9,7 +9,8 @@ const createTripSchema= Joi.object({
   plannedEndDate: Joi.date().iso().greater(Joi.ref('plannedStartDate')).required(),
   driver: id.required(),
   truck: id.required(),
-  trailer: id.required()
+  trailer: id.required(),
+  revenue: Joi.number().min(0)
 })
 
 const updateTripSchema= Joi.object({
@@ -20,7 +21,8 @@ const updateTripSchema= Joi.object({
   plannedEndDate: Joi.date().iso(),
   driver: id,
   truck: id,
-  trailer: id
+  trailer: id,
+  revenue: Joi.number().min(0)
 }).min(1)
 
 module.exports= { 

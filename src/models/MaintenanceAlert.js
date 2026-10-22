@@ -40,7 +40,7 @@ const maintenanceAlertSchema = new mongoose.Schema(
     timestamps: true
   }
 )
-
+maintenanceAlertSchema.index({ vehicleType: 1, vehicle: 1, status: 1 })
 module.exports = mongoose.model(
   'MaintenanceAlert',
   maintenanceAlertSchema

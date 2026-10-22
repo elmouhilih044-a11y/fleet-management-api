@@ -26,4 +26,13 @@ const save= async (trip)=> {
 const remove= async (trip)=> {
   return await trip.deleteOne()
 }
-module.exports= { findAll, findById, findOneForDriver, findDocumentById, findDocumentForDriver, create, save, remove }
+module.exports= { 
+  findAll,
+   findById, 
+   findOneForDriver,
+    findDocumentById,
+     findDocumentForDriver,
+      create,
+       save,
+        remove
+       }

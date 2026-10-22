@@ -68,6 +68,11 @@ const tripSchema= new mongoose.Schema(
       type: Number,
       min: 0
     },
+    revenue:{
+      type: Number,
+      min: 0,
+      default: 0
+    },
 
     notes:{
       type: String,
@@ -78,5 +83,8 @@ const tripSchema= new mongoose.Schema(
     timestamps:true
   }
 )
+tripSchema.index({ truck: 1, status: 1, plannedStartDate: 1, plannedEndDate: 1 })
+tripSchema.index({ trailer: 1, status: 1, plannedStartDate: 1, plannedEndDate: 1 })
+tripSchema.index({ driver: 1, status: 1, plannedStartDate: 1, plannedEndDate: 1 })
 
 module.exports= mongoose.model('Trip', tripSchema)

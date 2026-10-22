@@ -1,0 +1,11 @@
+const express= require("express")
+const router= express.Router()
+const analyticsController= require("../../controllers/analyticsController")
+const auth= require("../../middlewares/auth")
+const authorize= require("../../middlewares/authorize")
+router.use(auth, authorize("admin"))
+router.get("/drivers/eco-performance", analyticsController.getDriverEcoPerformance)
+router.get("/tires/health-matrix", analyticsController.getTireHealthMatrix)
+router.get("/trips/financial-esg", analyticsController.getFinancialEsg)
+router.get("/fleet/utilization-trends", analyticsController.getFleetUtilization)
+module.exports= router
