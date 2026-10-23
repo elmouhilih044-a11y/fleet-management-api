@@ -9,6 +9,20 @@
     "lint": "eslint .",
     "test": "jest --coverage"
   },
+    "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/services/tripService.js",
+      "src/services/availabilityService.js",
+      "src/services/mileageService.js",
+      "src/services/missionOrderService.js",
+      "src/services/storageService.js",
+      "src/validators/tripValidator.js"
+    ],
+    "coverageThreshold": {
+      "global": { "branches": 70, "functions": 70, "lines": 70, "statements": 70 }
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/elmouhilih044-a11y/fleet-management-api.git"
