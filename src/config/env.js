@@ -9,6 +9,12 @@ module.exports= {
     port: Number(process.env.PORT) || 3000,
     databaseUrl: process.env.DATABASE_URL,
     redisUrl: process.env.REDIS_URL || "redis://localhost:6379",
-    fuelPricePerLiter: Number(process.env.FUEL_PRICE_PER_LITER) || 11,
-    tireUnitPrice: Number(process.env.TIRE_UNIT_PRICE) || 3500
+    minio: {
+        endpoint: process.env.MINIO_ENDPOINT || "http://localhost:9000",
+        publicEndpoint: process.env.MINIO_PUBLIC_ENDPOINT || "http://localhost:9000",
+        user: process.env.MINIO_ROOT_USER,
+        password: process.env.MINIO_ROOT_PASSWORD,
+        bucket: process.env.MINIO_BUCKET || "fleettrack-documents",
+        presignedTtl: Number(process.env.PRESIGNED_TTL_SECONDS) || 900
+    }
 }

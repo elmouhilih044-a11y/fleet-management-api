@@ -73,6 +73,11 @@ const tripSchema= new mongoose.Schema(
       min: 0,
       default: 0
     },
+        missionOrder:{
+      bucket: String,
+      s3Key: String,
+      sizeBytes: Number
+    },
 
     notes:{
       type: String,
